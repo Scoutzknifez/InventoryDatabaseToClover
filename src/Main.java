@@ -1,5 +1,7 @@
 import Structures.CloverItem;
 import Structures.CloverTag;
+import Structures.RequestType;
+import Utility.Utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.squareup.okhttp.*;
 
@@ -22,26 +24,19 @@ public class Main
     }
 
     private static void getCloverTags() {
+        Request request = Utils.buildRequest(RequestType.GET, "tags", "");
+        Response response = Utils.runRequest(request);
+
+        if(response.code() != 200) {
+            throw new RuntimeException("Fetch for tags failed with error code: " + response.code());
+        }
+
         try {
-            String url = ("https://api.clover.com:443/v3/merchants/JAMSHGJDTVP31/tags?access_token=b7aa9b85-79b9-e015-cb2a-b40a2956b929");
-            OkHttpClient client = new OkHttpClient();
-
-            Request request = new Request.Builder()
-                    .url(url)
-                    .get()
-                    .header("accept", "application/json")
-                    .build();
-
-            Response response = client.newCall(request).execute();
-
-            if(response.code() != 200) {
-                throw new RuntimeException("Fetch for tags failed with error code: " + response.code());
-            }
-
             System.out.println(response.body().string());
         } catch (Exception e) {
             e.printStackTrace();
         }
+
     }
 
     private static void postTag() {
