@@ -7,13 +7,13 @@ import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
 public class Utils {
-    public static void runRequest(Request request) {
+    public static Response runRequest(Request request) {
         Response response = Utils.callRequest(request);
 
         if(!Utils.isResponseValid(response))
             throw Utils.makeResponseError(response);
 
-        Utils.printResponseBody(response);
+        return response;
     }
 
     private static Response callRequest(Request request) {

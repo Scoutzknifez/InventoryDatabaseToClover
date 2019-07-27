@@ -1,9 +1,10 @@
 package Structures;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter @Setter
+@Getter @Setter @AllArgsConstructor
 public class CloverTag {
     private String id;
     private String name;
@@ -11,5 +12,14 @@ public class CloverTag {
 
     public CloverTag(String name) {
         setName(name);
+    }
+
+    @Override
+    public String toString() {
+        return "<| Clover Tag |> \n" +
+                "ID: " + getId() + "\n" +
+                "Name: " + getName() + "\n" +
+                "Show in Reporting: " + isShowInReporting() + "\n" +
+                "----------------";
     }
 }
