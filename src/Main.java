@@ -24,111 +24,23 @@ public class Main
     }
 
     private static void getCloverTags() {
-        Request request = Utils.buildRequest(RequestType.GET, "tags", "");
-        Response response = Utils.runRequest(request);
-
-        if(response.code() != 200) {
-            throw new RuntimeException("Fetch for tags failed with error code: " + response.code());
-        }
-
-        try {
-            System.out.println(response.body().string());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+        Request request = Utils.buildRequest(RequestType.GET, "tags");
+        Utils.runRequest(request);
     }
 
-    private static void postTag() {
-        try {
-            // Make tag JSON object
-            ObjectMapper mapper = new ObjectMapper();
-            CloverTag tag = new CloverTag("Test_tag");
-            String tagJSON = mapper.writeValueAsString(tag);
-
-            // Make connection to clover and send the tag
-            String url = ("https://api.clover.com:443/v3/merchants/JAMSHGJDTVP31/tags?access_token=b7aa9b85-79b9-e015-cb2a-b40a2956b929");
-            OkHttpClient client = new OkHttpClient();
-
-            RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), tagJSON);
-
-            Request request = new Request.Builder()
-                    .url(url)
-                    .post(requestBody)
-                    .header("accept", "application/json")
-                    .header("content-type", "application/json")
-                    .build();
-
-            Response response = client.newCall(request).execute();
-
-            if (response.code() != 200) {
-                throw new RuntimeException("Tag post failed with error code: " + response.code());
-            }
-
-            System.out.println(response.body().string());
-
-        } catch(Exception e) {
-
-        }
+    private static void postTag(CloverTag tag) {
+        Request request = Utils.buildRequest(RequestType.POST, "tags", tag);
+        Utils.runRequest(request);
     }
 
-    private static void postItem() {
-        try {
-            // Make input for inventory
-            ObjectMapper mapper = new ObjectMapper();
-            CloverItem item = new CloverItem("test_item", "1234", "test_sku", 1698);
-            String input = mapper.writeValueAsString(item);
-            System.out.println(input);
-
-            // Get the connection and set the request information
-            String url = ("https://api.clover.com:443/v3/merchants/JAMSHGJDTVP31/items?access_token=b7aa9b85-79b9-e015-cb2a-b40a2956b929");
-            OkHttpClient client = new OkHttpClient();
-
-            RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), input);
-
-            Request request = new Request.Builder()
-                    .url(url)
-                    .post(requestBody)
-                    .header("accept", "application/json")
-                    .header("content-type", "application/json")
-                    .build();
-
-            Response response = client.newCall(request).execute();
-
-            if (response.code() != 200) {
-                throw new RuntimeException("Fetch failed with error code: " + response.code());
-            }
-
-            System.out.println(response.body().string());
-
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
+    private static void postItem(CloverItem item) {
+        Request request = Utils.buildRequest(RequestType.POST, "items", item);
+        Utils.runRequest(request);
     }
 
     private static void getCloverItemList() {
-        try {
-            // Get the connection and set the request information
-            String url = ("https://api.clover.com:443/v3/merchants/JAMSHGJDTVP31/items?access_token=b7aa9b85-79b9-e015-cb2a-b40a2956b929");
-
-            OkHttpClient client = new OkHttpClient();
-
-            Request request = new Request.Builder()
-                    .url(url)
-                    .get()
-                    .build();
-
-            Response response = client.newCall(request).execute();
-
-            if (response.code() != 200) {
-                throw new RuntimeException("Fetch failed with error code: " + response.code());
-            }
-
-            System.out.println(response.body().string());
-
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
+        Request request = Utils.buildRequest(RequestType.GET, "items");
+        Utils.runRequest(request);
     }
 
     private static void jsonMessing() {
