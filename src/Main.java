@@ -1,56 +1,111 @@
 import Structures.CloverItem;
+import Structures.CloverTag;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.squareup.okhttp.*;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.util.ArrayList;
 
 public class Main
 {
+    public static ArrayList<CloverTag> cloverTags = new ArrayList<>();
+
     public static void main(String[] args) {
         debug();
-
     }
 
     private static void debug() {
+        getCloverTags();
         // jsonMessing();
         // getCloverItemList();
-        postItem();
+        // postItem();
+        // postTag();
+    }
+
+    private static void getCloverTags() {
+        try {
+            String url = ("https://api.clover.com:443/v3/merchants/JAMSHGJDTVP31/tags?access_token=b7aa9b85-79b9-e015-cb2a-b40a2956b929");
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+                    .url(url)
+                    .get()
+                    .header("accept", "application/json")
+                    .build();
+
+            Response response = client.newCall(request).execute();
+
+            if(response.code() != 200) {
+                throw new RuntimeException("Fetch for tags failed with error code: " + response.code());
+            }
+
+            System.out.println(response.body().string());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void postTag() {
+        try {
+            // Make tag JSON object
+            ObjectMapper mapper = new ObjectMapper();
+            CloverTag tag = new CloverTag("Test_tag");
+            String tagJSON = mapper.writeValueAsString(tag);
+
+            // Make connection to clover and send the tag
+            String url = ("https://api.clover.com:443/v3/merchants/JAMSHGJDTVP31/tags?access_token=b7aa9b85-79b9-e015-cb2a-b40a2956b929");
+            OkHttpClient client = new OkHttpClient();
+
+            RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), tagJSON);
+
+            Request request = new Request.Builder()
+                    .url(url)
+                    .post(requestBody)
+                    .header("accept", "application/json")
+                    .header("content-type", "application/json")
+                    .build();
+
+            Response response = client.newCall(request).execute();
+
+            if (response.code() != 200) {
+                throw new RuntimeException("Tag post failed with error code: " + response.code());
+            }
+
+            System.out.println(response.body().string());
+
+        } catch(Exception e) {
+
+        }
     }
 
     private static void postItem() {
         try {
-            // Get the connection and set the request information
-            URL url = new URL("https://api.clover.com:443/v3/merchants/JAMSHGJDTVP31/items?access_token=b7aa9b85-79b9-e015-cb2a-b40a2956b929");
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setDoOutput(true);
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("Accept", "application/json");
-
             // Make input for inventory
             ObjectMapper mapper = new ObjectMapper();
             CloverItem item = new CloverItem("test_item", "1234", "test_sku", 1698);
             String input = mapper.writeValueAsString(item);
             System.out.println(input);
 
-            OutputStream outputStream = connection.getOutputStream();
-            outputStream.write(input.getBytes());
-            outputStream.flush();
+            // Get the connection and set the request information
+            String url = ("https://api.clover.com:443/v3/merchants/JAMSHGJDTVP31/items?access_token=b7aa9b85-79b9-e015-cb2a-b40a2956b929");
+            OkHttpClient client = new OkHttpClient();
 
-            if(connection.getResponseCode() != HttpURLConnection.HTTP_CREATED) {
-                throw new RuntimeException("Failed with error code: " + connection.getResponseCode());
+            RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), input);
+
+            Request request = new Request.Builder()
+                    .url(url)
+                    .post(requestBody)
+                    .header("accept", "application/json")
+                    .header("content-type", "application/json")
+                    .build();
+
+            Response response = client.newCall(request).execute();
+
+            if (response.code() != 200) {
+                throw new RuntimeException("Fetch failed with error code: " + response.code());
             }
 
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            System.out.println("Server responded with: ");
-            String response;
-            while((response = bufferedReader.readLine()) != null) {
-                System.out.println(response);
-            }
+            System.out.println(response.body().string());
 
-            connection.disconnect();
         } catch(Exception e) {
             e.printStackTrace();
         }
@@ -59,24 +114,22 @@ public class Main
     private static void getCloverItemList() {
         try {
             // Get the connection and set the request information
-            URL url = new URL("https://api.clover.com:443/v3/merchants/JAMSHGJDTVP31/items?access_token=b7aa9b85-79b9-e015-cb2a-b40a2956b929");
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setRequestProperty("Accept", "application/json");
+            String url = ("https://api.clover.com:443/v3/merchants/JAMSHGJDTVP31/items?access_token=b7aa9b85-79b9-e015-cb2a-b40a2956b929");
 
-            // Weed out the exceptions
-            if(connection.getResponseCode() != 200) {
-                throw new RuntimeException("Failed the API call! Error code: " + connection.getResponseCode());
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+                    .url(url)
+                    .get()
+                    .build();
+
+            Response response = client.newCall(request).execute();
+
+            if (response.code() != 200) {
+                throw new RuntimeException("Fetch failed with error code: " + response.code());
             }
 
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            System.out.println("Server responded with: ");
-            String response;
-            while((response = bufferedReader.readLine()) != null) {
-                System.out.println(response);
-            }
-
-            connection.disconnect();
+            System.out.println(response.body().string());
 
         } catch(Exception e) {
             e.printStackTrace();
