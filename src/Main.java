@@ -6,6 +6,7 @@ import Utility.Utils;
 import com.squareup.okhttp.*;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 
 public class Main
 {
@@ -17,8 +18,12 @@ public class Main
 
     private static void debug() {
         CloverItem item = new CloverItem("test_item_with_label", "1234", "959", 1698);
-        ArrayList<String> cloverTags = new ArrayList<>();
-        cloverTags.add(Constants.tagList.get(0).getId());
+        ArrayList<LinkedHashMap<?, ?>> cloverTags = new ArrayList<>();
+        LinkedHashMap<Object, Object> oneLabel = new LinkedHashMap<>();
+        oneLabel.put("id", Constants.tagList.get(0).getId());
+        oneLabel.put("name", Constants.tagList.get(0).getName());
+        oneLabel.put("showInReporting", Constants.tagList.get(0).isShowInReporting());
+        cloverTags.add(oneLabel);
         item.setTags(cloverTags);
         postItem(item);
         // jsonMessing();
