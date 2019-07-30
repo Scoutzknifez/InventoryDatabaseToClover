@@ -1,27 +1,58 @@
 package Structures;
 
+import Utility.Constants;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.io.Serializable;
+
+@JsonPropertyOrder({
+        "id",
+        "hidden",
+        "name",
+        "code",
+        "sku",
+        "price",
+        "priceType",
+        "defaultTaxRates",
+        "isRevenue",
+        "modifiedTime"
+})
 
 @AllArgsConstructor @Getter @Setter
-public class CloverItem {
+public class CloverItem implements Serializable {
+    private String id = "";
+    private boolean hidden = false;
     private String name;
-    private String sku;
     private String code;
+    private String sku;
     private long price;
-    private ArrayList<LinkedHashMap<?, ?>> tags;
     private String priceType = "FIXED";
     private boolean defaultTaxRates = true;
+    @JsonProperty(value="isRevenue")
     private boolean isRevenue = true;
-    private boolean hidden = false;
+    private long modifiedTime = 0;
+
+    public CloverItem() {}
+
     public CloverItem(String name, String sku, String code, long price) {
         setName(name);
         setSku(sku);
         setCode(code);
         setPrice(price);
+    }
+
+    @Override
+    public String toString() {
+        String returned = "";
+        try {
+            returned = Constants.OBJECT_MAPPER.writeValueAsString(this);
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+        return returned;
     }
 }
