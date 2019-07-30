@@ -1,50 +1,64 @@
 package Structures;
 
+import Interfaces.Filterable;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class ItemList
 {
-    private List<Item> itemList = new ArrayList<>();
+    private List<Object> itemList = new ArrayList<>();
 
     public ItemList() {
 
     }
 
-    public ItemList(List<Item> inList) {
+    public ItemList(List<Object> inList) {
         itemList = inList;
     }
 
-    public Item get(int index) {
+    public Object get(int index) {
         return itemList.get(index);
     }
 
-    public Item getItem(String filter) {
+    public Object getObject(String filter) {
         return filterList(filter).get(0);
     }
 
-    public List<Item> getItemList() {
+    public List<Object> getObjectList() {
         return itemList;
     }
 
-    public void add(Item item) {
+    public void add(Object item) {
         itemList.add(item);
     }
 
-    public void set(Item item, int index) {
+    public void set(Object item, int index) {
         itemList.set(index, item);
     }
 
-    public void remove(Item item) {
+    public void remove(Object item) {
         itemList.remove(item);
     }
 
-    public List<Item> filterList(String filter) {
-        List<Item> subset = new ArrayList<>();
-        for(Item item : itemList) {
-            if(item.containsFilter(filter))
-                subset.add(item);
+    public List<Object> filterList(String filter) {
+        List<Object> subset = new ArrayList<>();
+        for(Object item : itemList) {
+            if(item instanceof Filterable) {
+                if(((Filterable) item).containsFilter(filter))
+                    subset.add(item);
+            }
         }
         return subset;
+    }
+
+    public boolean contains(String string) {
+        for(Object item : itemList) {
+            if(item instanceof Filterable) {
+                if(((Filterable) item).containsFilter(string))
+                    return true;
+            }
+        }
+        return false;
     }
 }

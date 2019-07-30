@@ -1,5 +1,5 @@
-import Structures.CloverItem;
 import Structures.CloverTag;
+import Structures.Item;
 import Utility.Constants;
 import Utility.Utils;
 
@@ -11,13 +11,25 @@ public class Main
     }
 
     private static void debug() {
-        CloverItem item = new CloverItem("test_item_with_label", "1234", "959", 1698);
+        String listOfTags = "";
+        for(Object object : Constants.tagList.getObjectList()) {
+            if(!listOfTags.equalsIgnoreCase(""))
+                listOfTags += ", ";
+            CloverTag cloverTag = (CloverTag) object;
+            listOfTags += cloverTag.getName();
+        }
+        System.out.println("Current Labels: " + listOfTags);
 
-        System.out.println(item);
+        listOfTags = "";
+        for(Object object : Constants.inventoryList.getObjectList()) {
+            if(!listOfTags.equalsIgnoreCase(""))
+                listOfTags += ", ";
 
-        CloverItem responseItem = Utils.postItem(item);
+            Item item = (Item) object;
+            if(Constants.tagList.contains(item.getBrand()))
+                listOfTags += item.getBrand();
+        }
 
-        for(CloverTag tag : Constants.tagList)
-            Utils.linkItemToLabel(responseItem, tag);
+        System.out.println("Labels to create: " + listOfTags);
     }
 }

@@ -2,13 +2,15 @@ package Workers;
 
 
 import Structures.Item;
+import Structures.ItemList;
+import Utility.Constants;
 
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
 public class GetAllWorker extends WorkerParent implements Runnable{
-    private List<Item> items;
+    private List<Object> items;
 
     public GetAllWorker() {
         super();
@@ -19,13 +21,14 @@ public class GetAllWorker extends WorkerParent implements Runnable{
             return;
 
         items = getAll();
+        Constants.inventoryList = new ItemList(items);
         if(items == null) {
             System.out.println("Item list that was fetched is null.");
         }
 
         closeConnection();
     }
-    private List<Item> getAll() {
+    private List<Object> getAll() {
         String sqlArg = "SELECT * FROM physical_inventory";
         try {
             return putResultIntoList(statement.executeQuery(sqlArg));
@@ -34,8 +37,8 @@ public class GetAllWorker extends WorkerParent implements Runnable{
             return null;
         }
     }
-    private List<Item> putResultIntoList(ResultSet set) {
-        List<Item> fetchedList = new ArrayList<>();
+    private List<Object> putResultIntoList(ResultSet set) {
+        List<Object> fetchedList = new ArrayList<>();
         try {
             while (set.next()) {
                 String upc = set.getString("UPC");
@@ -53,7 +56,7 @@ public class GetAllWorker extends WorkerParent implements Runnable{
             return null;
         }
     }
-    public List<Item> getItems() {
+    public List<Object> getItems() {
         return items;
     }
 }

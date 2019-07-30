@@ -1,9 +1,7 @@
 package Utility;
 
-import Structures.CloverItem;
-import Structures.CloverTag;
-import Structures.CloverTagListResponseBody;
-import Structures.RequestType;
+import Structures.*;
+import Workers.WorkerHandler;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
@@ -14,7 +12,28 @@ import java.util.LinkedHashMap;
 
 public class Utils {
     public static void initialize() {
-        Constants.tagList = getCloverTags();
+        Thread cloverTagFetcherThread = grabCloverTags();
+        Thread sqlFetcherThread = grabInventory();
+
+        try {
+            cloverTagFetcherThread.join();
+            System.out.println("Tag List Size: " + Constants.tagList.getObjectList().size());
+            sqlFetcherThread.join();
+            System.out.println("Item List Size: " + Constants.inventoryList.getObjectList().size());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static Thread grabCloverTags() {
+        Thread thread = new Thread(() -> getCloverTags());
+        thread.start();
+        return thread;
+    }
+
+    public static Thread grabInventory() {
+        Thread thread = WorkerHandler.fetchInventory();
+        return thread;
     }
 
     public static CloverItem postItem(CloverItem item) {
@@ -37,32 +56,30 @@ public class Utils {
 
     public static void linkItemToLabel(CloverItem item, CloverTag tag) {
         String requestString = getItemLabelString(item, tag);
-        System.out.println(requestString);
         Request request = buildRequest(RequestType.POST, "tag_items", requestString);
         printResponseBody(runRequest(request));
     }
 
-    public static ArrayList<CloverTag> getCloverTags() {
+    public static void getCloverTags() {
         Request request = buildRequest(RequestType.GET, "tags");
         Response response = runRequest(request);
         if(response != null) {
             try {
                 CloverTagListResponseBody cloverTagListResponseBody = Constants.OBJECT_MAPPER.readValue(response.body().string(), CloverTagListResponseBody.class);
                 ArrayList<LinkedHashMap<String, String>> unparsedTagList = cloverTagListResponseBody.getElements();
-                ArrayList<CloverTag> tagList = new ArrayList<>();
+                ArrayList<Object> tagList = new ArrayList<>();
                 for(LinkedHashMap<String, String> mapping : unparsedTagList) {
                     String id = mapping.get("id");
                     String name = mapping.get("name");
                     boolean showInReporting = Boolean.parseBoolean(mapping.get("showInReporting"));
                     tagList.add(new CloverTag(id, name, showInReporting));
                 }
-                return tagList;
+                Constants.tagList = new ItemList(tagList);
             } catch(Exception e) {
                 System.out.println("Could not parse the clover tag list.");
                 e.printStackTrace();
             }
         }
-        return null;
     }
 
     public static Response runRequest(Request request) {
@@ -77,8 +94,6 @@ public class Utils {
                 e.printStackTrace();
             }
         } else {
-            System.out.println(response.code());
-
             if(!isResponseValid(response))
                 throw makeResponseError(response);
 
@@ -102,7 +117,6 @@ public class Utils {
     private static Request buildRequest(RequestType requestType, String apiSection, Object jsonable) {
         Request.Builder builder = new Request.Builder();
         String url = buildUrl(apiSection);
-        System.out.println(url);
         builder = builder.url(url);
 
         if(requestType == RequestType.GET)
@@ -133,7 +147,7 @@ public class Utils {
     }
 
     public static void printTags() {
-        for(CloverTag tag : Constants.tagList)
+        for(Object tag : Constants.tagList.getObjectList())
             System.out.println(tag);
     }
 
