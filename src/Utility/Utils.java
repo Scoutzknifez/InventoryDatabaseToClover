@@ -1,5 +1,6 @@
 package Utility;
 
+import Structures.CloverItem;
 import Structures.CloverTag;
 import Structures.CloverTagListResponseBody;
 import Structures.RequestType;
@@ -16,9 +17,34 @@ public class Utils {
         Constants.tagList = getCloverTags();
     }
 
+    public static CloverItem postItem(CloverItem item) {
+        Request request = buildRequest(RequestType.POST, "items", item);
+        Response response = runRequest(request);
+        try {
+            String body = response.body().string();
+            CloverItem cloverItem = Constants.OBJECT_MAPPER.readValue(body , CloverItem.class);
+            return cloverItem;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static void getCloverItemList() {
+        Request request = buildRequest(RequestType.GET, "items/");
+        runRequest(request);
+    }
+
+    public static void linkItemToLabel(CloverItem item, CloverTag tag) {
+        String requestString = getItemLabelString(item, tag);
+        System.out.println(requestString);
+        Request request = buildRequest(RequestType.POST, "tag_items", requestString);
+        printResponseBody(runRequest(request));
+    }
+
     public static ArrayList<CloverTag> getCloverTags() {
-        Request request = Utils.buildRequest(RequestType.GET, "tags");
-        Response response = Utils.runRequest(request);
+        Request request = buildRequest(RequestType.GET, "tags");
+        Response response = runRequest(request);
         if(response != null) {
             try {
                 CloverTagListResponseBody cloverTagListResponseBody = Constants.OBJECT_MAPPER.readValue(response.body().string(), CloverTagListResponseBody.class);
@@ -40,10 +66,19 @@ public class Utils {
     }
 
     public static Response runRequest(Request request) {
-        Response response = Utils.callRequest(request);
+        Response response = callRequest(request);
 
-        if(!Utils.isResponseValid(response))
-            throw Utils.makeResponseError(response);
+        if(isError429(response)) {
+            try {
+                Thread.sleep(250);
+                runRequest(request);
+            } catch (Exception e) {
+
+            }
+        }
+
+        if(!isResponseValid(response))
+            throw makeResponseError(response);
 
         return response;
     }
@@ -56,25 +91,29 @@ public class Utils {
         }
     }
 
-    public static Request buildRequest(RequestType requestType, String apiSection) {
+    private static Request buildRequest(RequestType requestType, String apiSection) {
         return buildRequest(requestType, apiSection, "");
     }
 
-    public static Request buildRequest(RequestType requestType, String apiSection, Object jsonable) {
+    private static Request buildRequest(RequestType requestType, String apiSection, Object jsonable) {
         Request.Builder builder = new Request.Builder();
-        builder = builder.url(buildUrl(apiSection));
+        String url = buildUrl(apiSection);
+        System.out.println(url);
+        builder = builder.url(url);
 
         if(requestType == RequestType.GET)
             builder = builder.get();
         else if(requestType == RequestType.POST) {
             String jsonString = "";
             try {
-                jsonString = Constants.OBJECT_MAPPER.writeValueAsString(jsonable);
-                System.out.println(jsonString);
+                if(!(jsonable instanceof String))
+                    jsonString = Constants.OBJECT_MAPPER.writeValueAsString(jsonable);
+                else
+                    jsonString = (String) jsonable;
             } catch (Exception e) {
                 System.out.println("Could not make the string for " + jsonable);
             }
-            RequestBody requestBody = RequestBody.create(MediaType.parse("application/parse"), jsonString);
+            RequestBody requestBody = RequestBody.create(MediaType.parse("application/octet-stream"), jsonString);
             builder = builder.post(requestBody);
         }
 
@@ -82,6 +121,16 @@ public class Utils {
                 .header("content-type", "application/json");
 
         return builder.build();
+    }
+
+    public static void postTag(CloverTag tag) {
+        Request request = buildRequest(RequestType.POST, "tags", tag);
+        runRequest(request);
+    }
+
+    public static void printTags() {
+        for(CloverTag tag : Constants.tagList)
+            System.out.println(tag);
     }
 
     private static void printResponseBody(Response response) {
@@ -92,12 +141,25 @@ public class Utils {
         }
     }
 
+    private static boolean isError429(Response response) {
+        return response.code() == 429;
+    }
+
     private static boolean isResponseValid(Response response) {
         return (response != null && response.code() == 200);
     }
 
     private static RuntimeException makeResponseError(Response response) {
+        try {
+            System.out.println(response.body().string());
+        } catch (Exception e) {
+            System.out.println("Can not print out the response body of error.");
+        }
         return new RuntimeException("Response came back with error code: " + response.code());
+    }
+
+    private static String getItemLabelString(CloverItem item, CloverTag tag) {
+        return "{\"elements\":[{ \"item\":{\"id\":\"" + item.getId() + "\"}, \"tag\":{\"id\":\"" + tag.getId() + "\"} }]}";
     }
 
     private static String buildUrl(String type) {
