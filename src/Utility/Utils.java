@@ -70,17 +70,21 @@ public class Utils {
 
         if(isError429(response)) {
             try {
-                Thread.sleep(250);
-                runRequest(request);
+                System.out.println("Calling back in a second. Currently at max connections.");
+                Thread.sleep(Constants.MILLIS_IN_SECOND);
+                return runRequest(request);
             } catch (Exception e) {
-
+                e.printStackTrace();
             }
+        } else {
+            System.out.println(response.code());
+
+            if(!isResponseValid(response))
+                throw makeResponseError(response);
+
+            return response;
         }
-
-        if(!isResponseValid(response))
-            throw makeResponseError(response);
-
-        return response;
+        return null;
     }
 
     private static Response callRequest(Request request) {
