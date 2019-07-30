@@ -1,6 +1,8 @@
 package Structures;
 
-public class Item
+import Interfaces.Filterable;
+
+public class Item implements Filterable
 {
     private String upc;
     private String productCode;

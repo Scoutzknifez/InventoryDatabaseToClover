@@ -14,6 +14,11 @@ public class CloverTag {
         setName(name);
     }
 
+    public boolean containsFilter(String string) {
+        string = string.trim();
+        return id.equalsIgnoreCase(string) || id.equalsIgnoreCase(name);
+    }
+
     @Override
     public String toString() {
         return "<| Clover Tag |> \n" +
