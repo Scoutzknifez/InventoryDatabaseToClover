@@ -21,13 +21,20 @@ public class Main
         System.out.println("Current Labels: " + listOfTags);
 
         listOfTags = "";
+        int lineCount = 1;
         for(Object object : Constants.inventoryList.getObjectList()) {
-            if(!listOfTags.equalsIgnoreCase(""))
-                listOfTags += ", ";
-
             Item item = (Item) object;
-            if(Constants.tagList.contains(item.getBrand()))
+            if(!Constants.tagList.contains(item.getBrand()) && !listOfTags.contains(item.getBrand())) {
+                if(!listOfTags.equalsIgnoreCase(""))
+                    listOfTags += ", ";
+
+                if(listOfTags.length() > 150 * lineCount) {
+                    listOfTags += "\n";
+                    lineCount++;
+                }
+
                 listOfTags += item.getBrand();
+            }
         }
 
         System.out.println("Labels to create: " + listOfTags);

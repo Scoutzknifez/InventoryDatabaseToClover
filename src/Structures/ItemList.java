@@ -1,6 +1,7 @@
 package Structures;
 
 import Interfaces.Filterable;
+import Utility.Constants;
 
 import java.util.ArrayList;
 import java.util.List;
