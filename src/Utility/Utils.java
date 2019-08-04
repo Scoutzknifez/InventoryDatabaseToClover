@@ -7,8 +7,8 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Utils {
     public static void initialize() {
@@ -23,6 +23,79 @@ public class Utils {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static CloverTag getItemsTag(Item item) {
+        for (Object object : Constants.tagList.getObjectList()) {
+            if (object instanceof CloverTag) {
+                CloverTag cloverTag = (CloverTag) object;
+                if (cloverTag.getName().equals(item.getBrand())) {
+                    return cloverTag;
+                }
+            }
+        }
+        return new CloverTag("N/A");
+    }
+
+    public static void makeNewTagsAndPost() {
+        String listOfTags = "";
+        for(Object object : Constants.tagList.getObjectList()) {
+            if(!listOfTags.equalsIgnoreCase(""))
+                listOfTags += ", ";
+            CloverTag cloverTag = (CloverTag) object;
+            listOfTags += cloverTag.getName();
+        }
+        System.out.println("Current Labels: " + listOfTags);
+
+        HashMap<String, Integer> brandToItemCount = new HashMap<>();
+        listOfTags = "";
+        int lineCount = 1;
+        for(Object object : Constants.inventoryList.getObjectList()) {
+            Item item = (Item) object;
+            if(!Constants.tagList.contains(item.getBrand()) && !brandToItemCount.keySet().contains(item.getBrand())) {
+                if(!listOfTags.equalsIgnoreCase(""))
+                    listOfTags += ", ";
+
+                if(listOfTags.length() > 150 * lineCount) {
+                    listOfTags += "\n";
+                    lineCount++;
+                }
+
+                listOfTags += item.getBrand();
+                brandToItemCount.put(item.getBrand(), 1);
+            } else {
+                int currentValue = brandToItemCount.get(item.getBrand()) + 1;
+                brandToItemCount.put(item.getBrand(), currentValue);
+            }
+        }
+
+        System.out.println("Labels to create:");
+        // System.out.println(listOfTags);
+        Map<String, Integer> sorted = sortByValue(brandToItemCount, false);
+
+        List<CloverTag> tagList = new ArrayList<>();
+        for (String string : sorted.keySet()) {
+            System.out.println(string + " - " + sorted.get(string));
+            tagList.add(new CloverTag(string));
+        }
+
+        for (CloverTag tag : tagList) {
+            Utils.postTag(tag);
+        }
+    }
+
+    private static Map<String, Integer> sortByValue(Map<String, Integer> unsortMap, final boolean order)
+    {
+        List<Map.Entry<String, Integer>> list = new LinkedList<>(unsortMap.entrySet());
+
+        // Sorting the list based on values
+        list.sort((o1, o2) -> order ? o1.getValue().compareTo(o2.getValue()) == 0
+                ? o1.getKey().compareTo(o2.getKey())
+                : o1.getValue().compareTo(o2.getValue()) : o2.getValue().compareTo(o1.getValue()) == 0
+                ? o2.getKey().compareTo(o1.getKey())
+                : o2.getValue().compareTo(o1.getValue()));
+        return list.stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b, LinkedHashMap::new));
+
     }
 
     public static Thread grabCloverTags() {
@@ -51,12 +124,32 @@ public class Utils {
 
     public static void getCloverItemList() {
         Request request = buildRequest(RequestType.GET, "items/");
-        runRequest(request);
+        Response response = runRequest(request);
+        if(response != null) {
+            try {
+                CloverItemListResponseBody cloverItemListResponseBody = Constants.OBJECT_MAPPER.readValue(response.body().string(), CloverItemListResponseBody.class);
+                ArrayList<LinkedHashMap<String, String>> unparsedTagList = cloverItemListResponseBody.getElements();
+                ArrayList<Object> itemList = new ArrayList<>();
+                for(LinkedHashMap<String, String> mapping : unparsedTagList) {
+                    String id = mapping.get("id");
+                    String name = mapping.get("name");
+                    String sku = mapping.get("sku");
+                    String code = mapping.get("code");
+                    long price = Long.parseLong(mapping.get("price"));
+                    itemList.add(new CloverItem(id, name, sku, code, price));
+                }
+                Constants.cloverInventoryList = new ItemList(itemList);
+            } catch (Exception e) {
+                System.out.println("Could not parse the clover items into a list.");
+                e.printStackTrace();
+            }
+        }
     }
 
     public static void linkItemToLabel(CloverItem item, CloverTag tag) {
         String requestString = getItemLabelString(item, tag);
         Request request = buildRequest(RequestType.POST, "tag_items", requestString);
+
         printResponseBody(runRequest(request));
     }
 

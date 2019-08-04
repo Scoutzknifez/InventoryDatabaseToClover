@@ -1,10 +1,10 @@
+import Structures.CloverItem;
 import Structures.CloverTag;
 import Structures.Item;
 import Utility.Constants;
 import Utility.Utils;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Collections;
 
 public class Main
 {
@@ -14,56 +14,39 @@ public class Main
     }
 
     private static void debug() {
-        String listOfTags = "";
-        for(Object object : Constants.tagList.getObjectList()) {
-            if(!listOfTags.equalsIgnoreCase(""))
-                listOfTags += ", ";
-            CloverTag cloverTag = (CloverTag) object;
-            listOfTags += cloverTag.getName();
-        }
-        System.out.println("Current Labels: " + listOfTags);
+        Utils.makeNewTagsAndPost();
+        Utils.getCloverTags();
+        postItems();
+        Utils.getCloverItemList();
+        Collections.reverse(Constants.cloverInventoryList.getObjectList());
+        linkItems();
+    }
 
-        HashMap<String, Integer> brandToItemCount = new HashMap<>();
-        listOfTags = "";
-        int lineCount = 1;
-        for(Object object : Constants.inventoryList.getObjectList()) {
-            Item item = (Item) object;
-            if(!Constants.tagList.contains(item.getBrand()) && !brandToItemCount.keySet().contains(item.getBrand())) {
-                if(!listOfTags.equalsIgnoreCase(""))
-                    listOfTags += ", ";
-
-                if(listOfTags.length() > 150 * lineCount) {
-                    listOfTags += "\n";
-                    lineCount++;
-                }
-
-                listOfTags += item.getBrand();
-                brandToItemCount.put(item.getBrand(), 1);
-            } else {
-                int currentValue = brandToItemCount.get(item.getBrand()) + 1;
-                brandToItemCount.put(item.getBrand(), currentValue);
+    private static void postItems() {
+        for(int i = 0; i < 10; i++) {
+            Object object = Constants.inventoryList.get(i);
+            if (object instanceof Item) {
+                Item item = (Item) object;
+                CloverItem cloverItem = new CloverItem(item.getName(), item.getUpc(), item.getProductCode(), ((long) (item.getPrice() * 100)));
+                Utils.postItem(cloverItem);
             }
         }
-
-        System.out.println("Labels to create:");
-        // System.out.println(listOfTags);
-        Map<String, Integer> sorted = sortByValue(brandToItemCount, false);
-
-        for (String string : sorted.keySet()) {
-            System.out.println(string + " - " + sorted.get(string));
-        }
     }
-    private static Map<String, Integer> sortByValue(Map<String, Integer> unsortMap, final boolean order)
-    {
-        List<Map.Entry<String, Integer>> list = new LinkedList<>(unsortMap.entrySet());
 
-        // Sorting the list based on values
-        list.sort((o1, o2) -> order ? o1.getValue().compareTo(o2.getValue()) == 0
-                ? o1.getKey().compareTo(o2.getKey())
-                : o1.getValue().compareTo(o2.getValue()) : o2.getValue().compareTo(o1.getValue()) == 0
-                ? o2.getKey().compareTo(o1.getKey())
-                : o2.getValue().compareTo(o1.getValue()));
-        return list.stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b, LinkedHashMap::new));
-
+    private static void linkItems() {
+        for(int i = 0; i < 10; i++) {
+            CloverItem cloverItem = (CloverItem) Constants.cloverInventoryList.get(i);
+            CloverTag cloverTag = null;
+            for(Object object : Constants.inventoryList.getObjectList()) {
+                if(object instanceof Item) {
+                    Item item = (Item) object;
+                    if(cloverItem.equalsItem(item)) {
+                        cloverTag = Utils.getItemsTag(item);
+                    }
+                }
+            }
+            if(cloverTag != null)
+                Utils.linkItemToLabel(cloverItem, cloverTag);
+        }
     }
 }

@@ -45,6 +45,18 @@ public class CloverItem implements Serializable {
         setPrice(price);
     }
 
+    public CloverItem(String id, String name, String sku, String code, long price) {
+        setId(id);
+        setName(name);
+        setSku(sku);
+        setCode(code);
+        setPrice(price);
+    }
+
+    public boolean equalsItem(Item item) {
+        return (item.getName().equals(getName()) && item.getUpc().equals(getSku()));
+    }
+
     @Override
     public String toString() {
         String returned = "";
