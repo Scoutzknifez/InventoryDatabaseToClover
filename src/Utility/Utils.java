@@ -25,6 +25,39 @@ public class Utils {
         }
     }
 
+    public static void postItems() {
+        for(int i = 0; i < Constants.inventoryList.getObjectList().size(); i++) {
+            Object object = Constants.inventoryList.get(i);
+            if (object instanceof Item) {
+                Item item = (Item) object;
+                double price = (item.getPrice() * 100.000005);
+                CloverItem cloverItem = new CloverItem(item.getName(), item.getUpc(), item.getProductCode(), ((long) price));
+                postItem(cloverItem);
+                System.out.println("Posted item " + i);
+                System.out.println(cloverItem.getName());
+            }
+        }
+    }
+
+    public static void linkItems() {
+        for(int i = 0; i < Constants.cloverInventoryList.getObjectList().size(); i++) {
+            CloverItem cloverItem = (CloverItem) Constants.cloverInventoryList.get(i);
+            CloverTag cloverTag = null;
+            for(Object object : Constants.inventoryList.getObjectList()) {
+                if(object instanceof Item) {
+                    Item item = (Item) object;
+                    if(cloverItem.equalsItem(item)) {
+                        cloverTag = getItemsTag(item);
+                    }
+                }
+            }
+            if(cloverTag != null) {
+                linkItemToLabel(cloverItem, cloverTag);
+                System.out.println("Linked item " + i);
+            }
+        }
+    }
+
     public static CloverTag getItemsTag(Item item) {
         for (Object object : Constants.tagList.getObjectList()) {
             if (object instanceof CloverTag) {
@@ -80,7 +113,7 @@ public class Utils {
         }
 
         for (CloverTag tag : tagList) {
-            Utils.postTag(tag);
+            postTag(tag);
         }
     }
 
@@ -187,8 +220,9 @@ public class Utils {
                 e.printStackTrace();
             }
         } else {
-            if(!isResponseValid(response))
+            if(!isResponseValid(response)) {
                 throw makeResponseError(response);
+            }
 
             return response;
         }
