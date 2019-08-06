@@ -2,11 +2,15 @@ package Utility;
 
 import Structures.*;
 import Workers.WorkerHandler;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -21,6 +25,28 @@ public class Utils {
             sqlFetcherThread.join();
             System.out.println("Item List Size: " + Constants.inventoryList.getObjectList().size());
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void loadData() {
+        try {
+            ArrayList<LinkedHashMap<String, String>> map = Constants.OBJECT_MAPPER.readValue(new FileInputStream("Data.json"), ArrayList.class);
+            ArrayList<CloverItem> cloverItems = parseList(map);
+            for(CloverItem cloverItem : cloverItems)
+                Constants.cloverInventoryList.add(cloverItem);
+        } catch (Exception e) {
+            System.out.println("Could not load data file!");
+            e.printStackTrace();
+        }
+    }
+
+    public static void saveData() {
+        try {
+            ObjectWriter writer = Constants.OBJECT_MAPPER.writer(new DefaultPrettyPrinter());
+            writer.writeValue(new File("Data.json"), Constants.cloverInventoryList.getObjectList());
+        } catch (Exception e) {
+            System.out.println("Could not make the data file!");
             e.printStackTrace();
         }
     }
@@ -143,7 +169,7 @@ public class Utils {
     }
 
     public static CloverItem postItem(CloverItem item) {
-        Request request = buildRequest(RequestType.POST, "items", item);
+        Request request = buildRequest(RequestType.POST, item, "items");
         Response response = runRequest(request);
         try {
             String body = response.body().string();
@@ -156,27 +182,57 @@ public class Utils {
     }
 
     public static void getCloverItemList() {
-        Request request = buildRequest(RequestType.GET, "items/");
-        Response response = runRequest(request);
-        if(response != null) {
-            try {
-                CloverItemListResponseBody cloverItemListResponseBody = Constants.OBJECT_MAPPER.readValue(response.body().string(), CloverItemListResponseBody.class);
-                ArrayList<LinkedHashMap<String, String>> unparsedTagList = cloverItemListResponseBody.getElements();
-                ArrayList<Object> itemList = new ArrayList<>();
-                for(LinkedHashMap<String, String> mapping : unparsedTagList) {
-                    String id = mapping.get("id");
-                    String name = mapping.get("name");
-                    String sku = mapping.get("sku");
-                    String code = mapping.get("code");
-                    long price = Long.parseLong(mapping.get("price"));
-                    itemList.add(new CloverItem(id, name, sku, code, price));
+        try {
+            for (int i = 0; i < 10; i++) {
+                Object object = Constants.inventoryList.get(i);
+            //for (Object object : Constants.inventoryList.getObjectList()) {
+                if(object instanceof Item) {
+                    Item item = (Item) object;
+                    String[] args = new String[2];
+                    args[0] = "items/";
+                    args[1] = makeFilterBySku(item.getUpc());
+                    Request request = buildRequest(RequestType.GET, args);
+                    Response response = runRequest(request);
+                    if(response != null) {
+                        CloverItemListResponseBody cloverItemListResponseBody = Constants.OBJECT_MAPPER.readValue(response.body().string(), CloverItemListResponseBody.class);
+                        ArrayList<LinkedHashMap<String, String>> unparsedTagList = cloverItemListResponseBody.getElements();
+                        ArrayList<CloverItem> items = parseList(unparsedTagList);
+                        for(CloverItem cloverItem : items) {
+                            if(!Constants.cloverInventoryList.contains(cloverItem)) {
+                                // Lets add the item to the list
+                                System.out.println("Adding");
+                                Constants.cloverInventoryList.add(cloverItem);
+                            } else {
+                                // We do have it already
+                                // Lets check if the item is up to date!
+                                System.out.println("Already got it!");
+                            }
+                        }
+                    }
                 }
-                Constants.cloverInventoryList = new ItemList(itemList);
-            } catch (Exception e) {
-                System.out.println("Could not parse the clover items into a list.");
-                e.printStackTrace();
             }
+        } catch (Exception e) {
+            System.out.println("Could not make the clover item list.");
+            e.printStackTrace();
         }
+    }
+
+    private static ArrayList<CloverItem> parseList(ArrayList<LinkedHashMap<String, String>> list) {
+        ArrayList<CloverItem> cloverItems = new ArrayList<>();
+        for(LinkedHashMap<String, String> mapping : list) {
+            String id = mapping.get("id");
+            String name = mapping.get("name");
+            String sku = mapping.get("sku");
+            String code = mapping.get("code");
+            long price = Long.parseLong(mapping.get("price"));
+
+            cloverItems.add(new CloverItem(id, name, sku, code, price));
+        }
+        return cloverItems;
+    }
+
+    private static String makeFilterBySku(String sku) {
+        return "filter=sku=" + sku;
     }
 
     public static void linkItemToLabel(CloverItem item, CloverTag tag) {
@@ -214,6 +270,11 @@ public class Utils {
         if(isError429(response)) {
             try {
                 System.out.println("Calling back in a second. Currently at max connections.");
+                try {
+                    response.body().close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 Thread.sleep(Constants.MILLIS_IN_SECOND);
                 return runRequest(request);
             } catch (Exception e) {
@@ -221,6 +282,11 @@ public class Utils {
             }
         } else {
             if(!isResponseValid(response)) {
+                try {
+                    response.body().close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 throw makeResponseError(response);
             }
 
@@ -237,15 +303,20 @@ public class Utils {
         }
     }
 
-    private static Request buildRequest(RequestType requestType, String apiSection) {
-        return buildRequest(requestType, apiSection, "");
+    /**
+     * Used for getters only
+     * @param requestType always GET
+     * @param apiSection arguments for type of get
+     * @return request
+     */
+    private static Request buildRequest(RequestType requestType, String... apiSection) {
+        return buildRequest(requestType, "", apiSection);
     }
 
-    private static Request buildRequest(RequestType requestType, String apiSection, Object jsonable) {
+    private static Request buildRequest(RequestType requestType, Object jsonable, String... apiSection) {
         Request.Builder builder = new Request.Builder();
         String url = buildUrl(apiSection);
         builder = builder.url(url);
-
         if(requestType == RequestType.GET)
             builder = builder.get();
         else if(requestType == RequestType.POST) {
@@ -269,13 +340,13 @@ public class Utils {
     }
 
     public static void postTag(CloverTag tag) {
-        Request request = buildRequest(RequestType.POST, "tags", tag);
+        Request request = buildRequest(RequestType.POST, tag, "tags");
         runRequest(request);
     }
 
-    public static void printTags() {
-        for(Object tag : Constants.tagList.getObjectList())
-            System.out.println(tag);
+    public static void printList(List<Object> list) {
+        for(Object object : list)
+            System.out.println(object);
     }
 
     private static void printResponseBody(Response response) {
@@ -307,7 +378,13 @@ public class Utils {
         return "{\"elements\":[{ \"item\":{\"id\":\"" + item.getId() + "\"}, \"tag\":{\"id\":\"" + tag.getId() + "\"} }]}";
     }
 
-    private static String buildUrl(String type) {
-        return Constants.WEBSITE_URL + Constants.MERCHANT_ID + "/" + type + Constants.API_TOKEN;
+    private static String buildUrl(String... args) {
+        String baseURL = Constants.WEBSITE_URL + Constants.MERCHANT_ID + "/" + args[0] + Constants.API_TOKEN;
+
+        for (int i = 1; i < args.length; i++) {
+            baseURL += "&" + args[i];
+        }
+
+        return baseURL;
     }
 }

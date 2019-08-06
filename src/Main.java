@@ -11,11 +11,15 @@ public class Main
     }
 
     private static void debug() {
-        Utils.makeNewTagsAndPost();
-        Utils.getCloverTags();
-        Utils.postItems();
+        Utils.loadData();
+        //Utils.makeNewTagsAndPost();
+        //Utils.getCloverTags();
+        //Utils.postItems();
         Utils.getCloverItemList();
         Collections.reverse(Constants.cloverInventoryList.getObjectList());
-        Utils.linkItems();
+        //Utils.printList(Constants.cloverInventoryList.getObjectList());
+        System.out.println(Constants.cloverInventoryList.getObjectList().size());
+        // Utils.linkItems();
+        Utils.saveData();
     }
 }

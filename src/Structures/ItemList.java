@@ -1,13 +1,14 @@
 package Structures;
 
 import Interfaces.Filterable;
-import Utility.Constants;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ItemList
 {
+    @Setter
     private List<Object> itemList = new ArrayList<>();
 
     public ItemList() {
@@ -61,5 +62,42 @@ public class ItemList
             }
         }
         return false;
+    }
+
+    public boolean contains(CloverItem cloverItem) {
+        for(Object object : itemList) {
+            if(object instanceof CloverItem) {
+                CloverItem inListItem = (CloverItem) object;
+                if(inListItem.getSku().equalsIgnoreCase(cloverItem.getSku()))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    public CloverItem getCloverItem(Object object) {
+        if(object instanceof String) {
+            String sku = (String) object;
+            for(Object objectItem : itemList) {
+                if(objectItem instanceof CloverItem) {
+                    CloverItem inListItem = (CloverItem) objectItem;
+                    if(inListItem.getSku().equalsIgnoreCase(sku))
+                        return inListItem;
+                }
+            }
+        }
+
+        if(object instanceof CloverItem) {
+            CloverItem cloverItem = (CloverItem) object;
+            for(Object objectItem : itemList) {
+                if(objectItem instanceof CloverItem) {
+                    CloverItem inListItem = (CloverItem) objectItem;
+                    if(inListItem.getSku().equalsIgnoreCase(cloverItem.getSku()))
+                        return inListItem;
+                }
+            }
+        }
+        return null;
     }
 }
