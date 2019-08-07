@@ -58,6 +58,37 @@ public class CloverItem implements Serializable {
     }
 
     @Override
+    public boolean equals(Object object) {
+        if(object == this)
+            return true;
+
+        if(checkValues(object))
+            return true;
+
+        return false;
+    }
+
+    private boolean checkValues(Object object) {
+        if(!(object instanceof CloverItem))
+            return false;
+
+        CloverItem cloverItem = (CloverItem) object;
+        if(getId().equalsIgnoreCase(cloverItem.getId()) &&
+            isHidden() == cloverItem.isHidden() &&
+            getName().equalsIgnoreCase(cloverItem.getName()) &&
+            getCode().equalsIgnoreCase(cloverItem.getCode()) &&
+            getSku().equalsIgnoreCase(cloverItem.getSku()) &&
+            getPrice() == cloverItem.getPrice() &&
+            getPriceType().equalsIgnoreCase(cloverItem.getPriceType()) &&
+            isDefaultTaxRates() == cloverItem.isDefaultTaxRates() &&
+            isRevenue() == cloverItem.isRevenue() &&
+            getModifiedTime() == cloverItem.getModifiedTime())
+            return true;
+
+        return  false;
+    }
+
+    @Override
     public String toString() {
         String returned = "";
         try {

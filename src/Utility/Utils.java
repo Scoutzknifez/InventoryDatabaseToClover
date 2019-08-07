@@ -29,6 +29,19 @@ public class Utils {
         }
     }
 
+
+    public static void checkReverse() {
+        try {
+            CloverItem cloverItem = (CloverItem) Constants.cloverInventoryList.get(0);
+            Item item = (Item) Constants.inventoryList.get(0);
+            if(!cloverItem.equalsItem(item)) {
+                Collections.reverse(Constants.cloverInventoryList.getObjectList());
+            }
+        } catch (Exception e) {
+            System.out.println("Failed to check if needing reverse");
+        }
+    }
+
     public static void loadData() {
         try {
             ArrayList<LinkedHashMap<String, String>> map = Constants.OBJECT_MAPPER.readValue(new FileInputStream("Data.json"), ArrayList.class);
@@ -181,58 +194,92 @@ public class Utils {
         return null;
     }
 
-    public static void getCloverItemList() {
+    private static Item getItemFromIndex(int index) {
+        int maxSize = Constants.inventoryList.getObjectList().size();
+        if(index < maxSize)
+            return ((Item) Constants.inventoryList.get(index));
+        else
+            return ((Item) Constants.inventoryList.get(maxSize - 1));
+    }
+
+    private static String getUpcOfIndex(int index) {
+        return getItemFromIndex(index).getUpc();
+    }
+
+    public static void getCloverItemListFaster() {
         try {
-            for (int i = 0; i < 10; i++) {
-                Object object = Constants.inventoryList.get(i);
-            //for (Object object : Constants.inventoryList.getObjectList()) {
-                if(object instanceof Item) {
-                    Item item = (Item) object;
-                    String[] args = new String[2];
-                    args[0] = "items/";
-                    args[1] = makeFilterBySku(item.getUpc());
-                    Request request = buildRequest(RequestType.GET, args);
-                    Response response = runRequest(request);
-                    if(response != null) {
-                        CloverItemListResponseBody cloverItemListResponseBody = Constants.OBJECT_MAPPER.readValue(response.body().string(), CloverItemListResponseBody.class);
-                        ArrayList<LinkedHashMap<String, String>> unparsedTagList = cloverItemListResponseBody.getElements();
-                        ArrayList<CloverItem> items = parseList(unparsedTagList);
-                        for(CloverItem cloverItem : items) {
-                            if(!Constants.cloverInventoryList.contains(cloverItem)) {
-                                // Lets add the item to the list
-                                System.out.println("Adding");
-                                Constants.cloverInventoryList.add(cloverItem);
-                            } else {
-                                // We do have it already
-                                // Lets check if the item is up to date!
-                                System.out.println("Already got it!");
-                            }
+            int callsRequired = (Constants.inventoryList.getObjectList().size() / 1000) + 1;
+            int splitSize = Constants.inventoryList.getObjectList().size() / callsRequired;
+
+            ArrayList<Integer> ints = new ArrayList<>();
+            int lastIndexCalled = 0;
+            for(int i = 0; i < callsRequired; i++) {
+                int farReach = lastIndexCalled + splitSize;
+                ints.add(farReach);
+                lastIndexCalled = ++farReach;
+            }
+
+            for(Integer integer : ints) {
+                String[] args = new String[3];
+                args[0] = "items/";
+                args[1] = "limit=1000";
+                args[2] = makeFilterBySku(getUpcOfIndex(integer));
+                Request request = buildRequest(RequestType.GET, args);
+                Response response = runRequest(request);
+                if(response != null) {
+                    CloverItemListResponseBody cloverItemListResponseBody = Constants.OBJECT_MAPPER.readValue(response.body().string(), CloverItemListResponseBody.class);
+                    ArrayList<LinkedHashMap<String, String>> unparsedItemList = cloverItemListResponseBody.getElements();
+                    ArrayList<CloverItem> items = parseList(unparsedItemList);
+                    for(CloverItem cloverItem : items) {
+                        if(!Constants.cloverInventoryList.contains(cloverItem)) {
+                            // Lets add the item to the list
+                            Constants.cloverInventoryList.add(cloverItem);
+                        } else {
+                            // We do have it already
+                            // Lets check if the item is up to date!
+                            //System.out.println("Already got it!");
                         }
                     }
                 }
             }
         } catch (Exception e) {
-            System.out.println("Could not make the clover item list.");
+            System.out.println("Could not make the clover item list!");
             e.printStackTrace();
         }
     }
 
     private static ArrayList<CloverItem> parseList(ArrayList<LinkedHashMap<String, String>> list) {
         ArrayList<CloverItem> cloverItems = new ArrayList<>();
-        for(LinkedHashMap<String, String> mapping : list) {
+
+        for(int i = list.size() - 1; i >= 0; i--) {
+            LinkedHashMap<String, String> mapping = list.get(i);
+
             String id = mapping.get("id");
             String name = mapping.get("name");
             String sku = mapping.get("sku");
             String code = mapping.get("code");
-            long price = Long.parseLong(mapping.get("price"));
+            Object obj = mapping.get("price");
 
-            cloverItems.add(new CloverItem(id, name, sku, code, price));
+            long price;
+            if(obj instanceof Integer) {
+                Integer integer = (Integer) obj;
+                price = (long) integer;
+            } else {
+                String string = (String) obj;
+                price = Long.parseLong(string);
+            }
+
+            try {
+                cloverItems.add(new CloverItem(id, name, sku, code, price));
+            } catch (Exception e) {
+                System.out.println("Could not parse item into clover Item.");
+            }
         }
         return cloverItems;
     }
 
     private static String makeFilterBySku(String sku) {
-        return "filter=sku=" + sku;
+        return "filter=sku<=" + sku;
     }
 
     public static void linkItemToLabel(CloverItem item, CloverTag tag) {
