@@ -10,12 +10,11 @@ public class Main
 
     private static void debug() {
         Utils.loadData();
-        //Utils.makeNewTagsAndPost();
+        // Utils.makeNewTagsAndPost();
         //Utils.getCloverTags();
         Utils.getCloverItemListFaster();
         Utils.checkReverse();
-        Utils.postItems();
-        //Utils.printList(Constants.cloverInventoryList.getObjectList());
+        Utils.syncItems();
         System.out.println(Constants.cloverInventoryList.getObjectList().size());
         // Utils.linkItems();
         Utils.saveData();

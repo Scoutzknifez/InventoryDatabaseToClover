@@ -29,6 +29,42 @@ public class Utils {
         }
     }
 
+    public static void syncItems() {
+        // Posts new items that didnt exist before
+        postItems();
+        sortCloverItemList();
+        // Deletes items that were removed off of master
+        deleteItems();
+        sortCloverItemList();
+        // updates changed items
+        // updateItems();
+        // sortCloverItemList();
+    }
+
+    private static void deleteItems() {
+        try {
+            int index = 0;
+            while(Constants.cloverInventoryList.getObjectList().size() != Constants.inventoryList.getObjectList().size()) {
+                CloverItem cloverItem = (CloverItem) Constants.cloverInventoryList.get(index);
+                Item item = (Item) Constants.inventoryList.get(index);
+
+                if(!cloverItem.equalsSku(item)) {
+                    String[] args = new String[1];
+                    args[0] = "items/" + cloverItem.getId();
+                    Request request = buildRequest(RequestType.DELETE, args);
+                    Response response = runRequest(request);
+                    if(response != null) {
+                        Constants.cloverInventoryList.remove(cloverItem);
+                    }
+                } else {
+                    index++;
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Can not delete items from clover.");
+            e.printStackTrace();
+        }
+    }
 
     public static void checkReverse() {
         try {
@@ -54,24 +90,28 @@ public class Utils {
         }
     }
 
+    private static void sortCloverItemList() {
+        // Sort before saving file to json
+        Constants.cloverInventoryList.getObjectList().sort((o1, o2) -> {
+            try {
+                CloverItem c1 = (CloverItem) o1;
+                CloverItem c2 = (CloverItem) o2;
+                int result = String.CASE_INSENSITIVE_ORDER.compare(c1.getSku(), c2.getSku());
+                if(result == 0) {
+                    result = c1.getSku().compareTo(c2.getSku());
+                }
+                return result;
+            } catch (Exception e) {
+                System.out.println("Could not compare clover items!");
+                e.printStackTrace();
+            }
+            return 0;
+        });
+    }
+
     public static void saveData() {
         try {
-            // Sort before saving file to json
-            Constants.cloverInventoryList.getObjectList().sort((o1, o2) -> {
-                try {
-                    CloverItem c1 = (CloverItem) o1;
-                    CloverItem c2 = (CloverItem) o2;
-                    int result = String.CASE_INSENSITIVE_ORDER.compare(c1.getSku(), c2.getSku());
-                    if(result == 0) {
-                        result = c1.getSku().compareTo(c2.getSku());
-                    }
-                    return result;
-                } catch (Exception e) {
-                    System.out.println("Could not compare clover items!");
-                    e.printStackTrace();
-                }
-                return 0;
-            });
+            sortCloverItemList();
 
             ObjectWriter writer = Constants.OBJECT_MAPPER.writer(new DefaultPrettyPrinter());
             writer.writeValue(new File("Data.json"), Constants.cloverInventoryList.getObjectList());
@@ -398,6 +438,9 @@ public class Utils {
             }
             RequestBody requestBody = RequestBody.create(MediaType.parse("application/octet-stream"), jsonString);
             builder = builder.post(requestBody);
+        }
+        else if(requestType == RequestType.DELETE) {
+            builder = builder.delete();
         }
 
         builder = builder.header("accept", "application/json")

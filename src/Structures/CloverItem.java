@@ -69,6 +69,10 @@ public class CloverItem implements Serializable, Filterable {
         return (item.getName().equals(getName()) && item.getUpc().equals(getSku()));
     }
 
+    public boolean equalsSku(Item item) {
+        return item.getUpc().equals(getSku());
+    }
+
     @Override
     public boolean equals(Object object) {
         if(object == this)
