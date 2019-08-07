@@ -1,5 +1,6 @@
 package Structures;
 
+import Interfaces.Filterable;
 import Utility.Constants;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -23,7 +24,7 @@ import java.io.Serializable;
 })
 
 @AllArgsConstructor @Getter @Setter
-public class CloverItem implements Serializable {
+public class CloverItem implements Serializable, Filterable {
     private String id = "";
     private boolean hidden = false;
     private String name;
@@ -51,6 +52,17 @@ public class CloverItem implements Serializable {
         setSku(sku);
         setCode(code);
         setPrice(price);
+    }
+
+    public boolean containsFilter(String searchTerm) {
+        if(getId().equalsIgnoreCase(searchTerm) ||
+                getName().equalsIgnoreCase(searchTerm) ||
+                getCode().equalsIgnoreCase(searchTerm) ||
+                getSku().equalsIgnoreCase(searchTerm) ||
+                getPriceType().equalsIgnoreCase(searchTerm))
+            return true;
+
+        return false;
     }
 
     public boolean equalsItem(Item item) {

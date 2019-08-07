@@ -28,6 +28,7 @@ public class Item implements Filterable
         this.color = color.trim();
         this.itemIsInPhysical = itemIsInPhysical;
     }
+
     public boolean containsFilter(String searchTerm) {
         if(getUpc().toLowerCase().contains(searchTerm.toLowerCase())
                 || getName().toLowerCase().contains(searchTerm.toLowerCase())
@@ -39,6 +40,7 @@ public class Item implements Filterable
             return true;
         return false;
     }
+
     public void checkSyntax()
     {
         if(upc.contains("\'"))

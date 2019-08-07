@@ -76,6 +76,11 @@ public class ItemList
         return false;
     }
 
+    /**
+     * Get the item that is associated with the parameter
+     * @param object Either a string or another clover item
+     * @return The clover item
+     */
     public CloverItem getCloverItem(Object object) {
         if(object instanceof String) {
             String sku = (String) object;

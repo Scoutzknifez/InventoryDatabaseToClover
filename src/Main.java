@@ -12,9 +12,9 @@ public class Main
         Utils.loadData();
         //Utils.makeNewTagsAndPost();
         //Utils.getCloverTags();
-        //Utils.postItems();
         Utils.getCloverItemListFaster();
         Utils.checkReverse();
+        Utils.postItems();
         //Utils.printList(Constants.cloverInventoryList.getObjectList());
         System.out.println(Constants.cloverInventoryList.getObjectList().size());
         // Utils.linkItems();

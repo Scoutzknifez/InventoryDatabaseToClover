@@ -56,6 +56,23 @@ public class Utils {
 
     public static void saveData() {
         try {
+            // Sort before saving file to json
+            Constants.cloverInventoryList.getObjectList().sort((o1, o2) -> {
+                try {
+                    CloverItem c1 = (CloverItem) o1;
+                    CloverItem c2 = (CloverItem) o2;
+                    int result = String.CASE_INSENSITIVE_ORDER.compare(c1.getSku(), c2.getSku());
+                    if(result == 0) {
+                        result = c1.getSku().compareTo(c2.getSku());
+                    }
+                    return result;
+                } catch (Exception e) {
+                    System.out.println("Could not compare clover items!");
+                    e.printStackTrace();
+                }
+                return 0;
+            });
+
             ObjectWriter writer = Constants.OBJECT_MAPPER.writer(new DefaultPrettyPrinter());
             writer.writeValue(new File("Data.json"), Constants.cloverInventoryList.getObjectList());
         } catch (Exception e) {
@@ -69,11 +86,13 @@ public class Utils {
             Object object = Constants.inventoryList.get(i);
             if (object instanceof Item) {
                 Item item = (Item) object;
-                double price = (item.getPrice() * 100.000005);
-                CloverItem cloverItem = new CloverItem(item.getName(), item.getUpc(), item.getProductCode(), ((long) price));
-                postItem(cloverItem);
-                System.out.println("Posted item " + i);
-                System.out.println(cloverItem.getName());
+                if(!Constants.cloverInventoryList.contains(item.getUpc())) {
+                    double price = (item.getPrice() * 100.000005);
+                    CloverItem cloverItem = new CloverItem(item.getName(), item.getUpc(), item.getProductCode(), ((long) price));
+                    postItem(cloverItem);
+                    System.out.println("Posted item " + i);
+                    System.out.println(cloverItem.getName());
+                }
             }
         }
     }
@@ -187,6 +206,7 @@ public class Utils {
         try {
             String body = response.body().string();
             CloverItem cloverItem = Constants.OBJECT_MAPPER.readValue(body , CloverItem.class);
+            Constants.cloverInventoryList.add(cloverItem);
             return cloverItem;
         } catch (Exception e) {
             e.printStackTrace();
