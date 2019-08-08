@@ -17,7 +17,7 @@ public class CloverTag implements Filterable {
 
     public boolean containsFilter(String string) {
         string = string.trim();
-        return id.equalsIgnoreCase(string) || id.equalsIgnoreCase(name);
+        return getId().equals(string) || getName().equals(string);
     }
 
     @Override

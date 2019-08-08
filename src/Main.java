@@ -9,14 +9,19 @@ public class Main
     }
 
     private static void debug() {
-        Utils.loadData();
-        // Utils.makeNewTagsAndPost();
-        //Utils.getCloverTags();
+        // Utils.testUrl();
+
+        // Utils.loadData();
+        Utils.getCloverTags();
+        Utils.makeNewTagsAndPost();
+        Utils.getCloverTags();
+        // Utils.getCloverItemListPerfectly();
         Utils.getCloverItemListFaster();
+        Utils.checkDuplicates();
         Utils.checkReverse();
         Utils.syncItems();
-        System.out.println(Constants.cloverInventoryList.getObjectList().size());
-        // Utils.linkItems();
+        System.out.println("Size: " + Constants.cloverInventoryList.getObjectList().size());
+        Utils.linkItems();
         Utils.saveData();
     }
 }

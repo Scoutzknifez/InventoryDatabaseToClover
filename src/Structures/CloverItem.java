@@ -2,6 +2,7 @@ package Structures;
 
 import Interfaces.Filterable;
 import Utility.Constants;
+import Utility.Utils;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
@@ -65,12 +66,23 @@ public class CloverItem implements Serializable, Filterable {
         return false;
     }
 
+    public boolean needsUpdate(Item item) {
+        long itemPrice = Utils.makeLong(item.getPrice());
+        return (!getName().equals(item.getName()) ||
+                !getCode().equals(item.getProductCode()) ||
+                getPrice() != itemPrice);
+    }
+
     public boolean equalsItem(Item item) {
         return (item.getName().equals(getName()) && item.getUpc().equals(getSku()));
     }
 
     public boolean equalsSku(Item item) {
         return item.getUpc().equals(getSku());
+    }
+
+    public boolean equalsSku(CloverItem cloverItem) {
+        return cloverItem.getSku().equals(getSku());
     }
 
     @Override
