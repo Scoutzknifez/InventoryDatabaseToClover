@@ -36,6 +36,47 @@ public class Utils {
             e.printStackTrace();
         }
     }
+    public static void printRequiredTags() {
+        String listOfTags = "";
+        for(Object object : Constants.tagList.getObjectList()) {
+            if(!listOfTags.equalsIgnoreCase(""))
+                listOfTags += ", ";
+            CloverTag cloverTag = (CloverTag) object;
+            listOfTags += cloverTag.getName();
+        }
+        System.out.println("Current Labels: " + listOfTags);
+
+        HashMap<String, Integer> brandToItemCount = new HashMap<>();
+        listOfTags = "";
+        int lineCount = 1;
+        for(Object object : Constants.inventoryList.getObjectList()) {
+            Item item = (Item) object;
+            if(!Constants.tagList.contains(item.getBrand())) {
+                if(!listOfTags.equalsIgnoreCase(""))
+                    listOfTags += ", ";
+
+                if(listOfTags.length() > 150 * lineCount) {
+                    listOfTags += "\n";
+                    lineCount++;
+                }
+
+                listOfTags += item.getBrand();
+                brandToItemCount.put(item.getBrand(), 1);
+            } else {
+                if(brandToItemCount.get(item.getBrand()) == null)
+                    brandToItemCount.put(item.getBrand(), 1);
+                else {
+                    int currentValue = brandToItemCount.get(item.getBrand()) + 1;
+                    brandToItemCount.put(item.getBrand(), currentValue);
+                }
+            }
+        }
+
+        Map<String, Integer> sorted = sortByValue(brandToItemCount, false);
+        for (String string : sorted.keySet()) {
+            System.out.println(string + " - " + sorted.get(string));
+        }
+    }
 
     public static void syncItems() {
         sortCloverItemList();

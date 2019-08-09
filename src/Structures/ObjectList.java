@@ -6,21 +6,21 @@ import lombok.Setter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ItemList
+public class ObjectList
 {
     @Setter
-    private List<Object> itemList = new ArrayList<>();
+    private List<Object> ObjectList = new ArrayList<>();
 
-    public ItemList() {
+    public ObjectList() {
 
     }
 
-    public ItemList(List<Object> inList) {
-        itemList = inList;
+    public ObjectList(List<Object> inList) {
+        ObjectList = inList;
     }
 
     public Object get(int index) {
-        return itemList.get(index);
+        return ObjectList.get(index);
     }
 
     public Object getObject(String filter) {
@@ -28,24 +28,24 @@ public class ItemList
     }
 
     public List<Object> getObjectList() {
-        return itemList;
+        return ObjectList;
     }
 
     public void add(Object item) {
-        itemList.add(item);
+        ObjectList.add(item);
     }
 
     public void set(Object item, int index) {
-        itemList.set(index, item);
+        ObjectList.set(index, item);
     }
 
     public void remove(Object item) {
-        itemList.remove(item);
+        ObjectList.remove(item);
     }
 
     public List<Object> filterList(String filter) {
         List<Object> subset = new ArrayList<>();
-        for(Object item : itemList) {
+        for(Object item : ObjectList) {
             if(item instanceof Filterable) {
                 if(((Filterable) item).containsFilter(filter))
                     subset.add(item);
@@ -55,7 +55,7 @@ public class ItemList
     }
 
     public boolean contains(String string) {
-        for(Object item : itemList) {
+        for(Object item : ObjectList) {
             if(item instanceof Filterable) {
                 if(((Filterable) item).containsFilter(string))
                     return true;
@@ -65,7 +65,7 @@ public class ItemList
     }
 
     public boolean contains(CloverItem cloverItem) {
-        for(Object object : itemList) {
+        for(Object object : ObjectList) {
             if(object instanceof CloverItem) {
                 CloverItem inListItem = (CloverItem) object;
                 if(inListItem.getSku().equalsIgnoreCase(cloverItem.getSku()))
@@ -84,7 +84,7 @@ public class ItemList
     public CloverItem getCloverItem(Object object) {
         if(object instanceof String) {
             String sku = (String) object;
-            for(Object objectItem : itemList) {
+            for(Object objectItem : ObjectList) {
                 if(objectItem instanceof CloverItem) {
                     CloverItem inListItem = (CloverItem) objectItem;
                     if(inListItem.getSku().equalsIgnoreCase(sku))
@@ -95,7 +95,7 @@ public class ItemList
 
         if(object instanceof CloverItem) {
             CloverItem cloverItem = (CloverItem) object;
-            for(Object objectItem : itemList) {
+            for(Object objectItem : ObjectList) {
                 if(objectItem instanceof CloverItem) {
                     CloverItem inListItem = (CloverItem) objectItem;
                     if(inListItem.getSku().equalsIgnoreCase(cloverItem.getSku()))

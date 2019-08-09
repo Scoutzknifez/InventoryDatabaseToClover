@@ -2,7 +2,7 @@ package Workers;
 
 
 import Structures.Item;
-import Structures.ItemList;
+import Structures.ObjectList;
 import Utility.Constants;
 
 import java.sql.ResultSet;
@@ -21,7 +21,7 @@ public class GetAllWorker extends WorkerParent implements Runnable{
             return;
 
         items = getAll();
-        Constants.inventoryList = new ItemList(items);
+        Constants.inventoryList = new ObjectList(items);
         if(items == null) {
             System.out.println("Item list that was fetched is null.");
         }
