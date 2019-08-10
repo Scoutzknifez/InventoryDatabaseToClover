@@ -282,11 +282,26 @@ public class Utils {
                     }
                 }
             }
-            if(cloverTag != null) {
+            if(cloverTag != null && getTag(cloverItem) == null) {
                 linkItemToLabel(cloverItem, cloverTag);
                 System.out.println("Linked item " + cloverItem.getName() + " (" + cloverItem.getId() + ") with " + cloverTag.getName() + " (" + cloverTag.getId() + ")");
             }
         }
+    }
+
+    private static String getTag(CloverItem cloverItem) {
+        String brand = null;
+        if(cloverItem.getTags() != null) {
+            try {
+                LinkedHashMap<String, Object> mapping = (LinkedHashMap<String, Object>) cloverItem.getTags();
+                ArrayList<LinkedHashMap<String, Object>> tagList = (ArrayList<LinkedHashMap<String, Object>>) mapping.get("elements");
+                LinkedHashMap<String, Object> currentTag = tagList.get(0);
+                brand = (String) currentTag.get("name");
+            } catch (Exception e) {
+                System.out.println("Item has no brand: " + cloverItem.getName());
+            }
+        }
+        return brand;
     }
 
     public static CloverTag getItemsTag(Item item) {
