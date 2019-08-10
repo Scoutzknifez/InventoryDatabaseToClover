@@ -206,7 +206,7 @@ public class Utils {
 
     public static void loadData() {
         try {
-            ArrayList<LinkedHashMap<String, String>> map = Constants.OBJECT_MAPPER.readValue(new FileInputStream("Data.json"), ArrayList.class);
+            ArrayList<LinkedHashMap<String, Object>> map = Constants.OBJECT_MAPPER.readValue(new FileInputStream("Data.json"), ArrayList.class);
             ArrayList<CloverItem> cloverItems = parseList(map);
             for(CloverItem cloverItem : cloverItems)
                 Constants.cloverInventoryList.add(cloverItem);
@@ -420,7 +420,7 @@ public class Utils {
                 Response response = runRequest(request);
                 if(response != null) {
                     CloverItemListResponseBody cloverItemListResponseBody = Constants.OBJECT_MAPPER.readValue(response.body().string(), CloverItemListResponseBody.class);
-                    ArrayList<LinkedHashMap<String, String>> unparsedItemList = cloverItemListResponseBody.getElements();
+                    ArrayList<LinkedHashMap<String, Object>> unparsedItemList = cloverItemListResponseBody.getElements();
                     ArrayList<CloverItem> items = parseList(unparsedItemList);
                     for(CloverItem cloverItem : items) {
                         Constants.cloverInventoryList.add(cloverItem);
@@ -440,18 +440,19 @@ public class Utils {
             int callsRequired = (Constants.inventoryList.getObjectList().size() / 1000) + 1;
 
             for(int i = 0; i < callsRequired; i++) {
-                String[] args = new String[3];
+                String[] args = new String[4];
                 args[0] = "items/";
                 args[1] = "limit=1000";
-                args[2] = "offset=" + (i * 1000);
+                args[2] = "expand=tags,itemStock";
+                args[3] = "offset=" + (i * 1000);
                 Request request = buildRequest(RequestType.GET, args);
                 Response response = runRequest(request);
                 if(response != null) {
                     CloverItemListResponseBody cloverItemListResponseBody = Constants.OBJECT_MAPPER.readValue(response.body().string(), CloverItemListResponseBody.class);
-                    ArrayList<LinkedHashMap<String, String>> unparsedItemList = cloverItemListResponseBody.getElements();
+                    ArrayList<LinkedHashMap<String, Object>> unparsedItemList = cloverItemListResponseBody.getElements();
                     ArrayList<CloverItem> items = parseList(unparsedItemList);
                     for(CloverItem cloverItem : items) {
-                        if(cloverItem.getSku() != null)
+                        if(cloverItem.getSku() != null && !cloverItem.getSku().equals(""))
                             Constants.cloverInventoryList.add(cloverItem);
                     }
                 }
@@ -463,16 +464,32 @@ public class Utils {
         sortCloverItemList();
     }
 
-    private static ArrayList<CloverItem> parseList(ArrayList<LinkedHashMap<String, String>> list) {
+    private static ArrayList<CloverItem> parseList(ArrayList<LinkedHashMap<String, Object>> list) {
         ArrayList<CloverItem> cloverItems = new ArrayList<>();
 
         for(int i = list.size() - 1; i >= 0; i--) {
-            LinkedHashMap<String, String> mapping = list.get(i);
+            LinkedHashMap<String, Object> mapping = list.get(i);
 
-            String id = mapping.get("id");
-            String name = mapping.get("name");
-            String sku = mapping.get("sku");
-            String code = mapping.get("code");
+            String id = "";
+            Object idObject = mapping.get("id");
+            if(idObject instanceof String)
+                id = (String) idObject;
+
+            String name = "";
+            Object nameObject = mapping.get("name");
+            if(nameObject instanceof String)
+                name = (String) nameObject;
+
+            String sku = "";
+            Object skuObject = mapping.get("sku");
+            if(skuObject instanceof String)
+                sku = (String) skuObject;
+
+            String code = "";
+            Object codeObject = mapping.get("code");
+            if(codeObject instanceof String)
+                code = (String) codeObject;
+
             Object obj = mapping.get("price");
 
             long price;
@@ -484,8 +501,11 @@ public class Utils {
                 price = Long.parseLong(string);
             }
 
+            Object tags = mapping.get("tags");
+            Object itemStock = mapping.get("itemStock");
+
             try {
-                cloverItems.add(new CloverItem(id, name, sku, code, price));
+                cloverItems.add(new CloverItem(id, name, sku, code, price, tags, itemStock));
             } catch (Exception e) {
                 System.out.println("Could not parse item into clover Item.");
             }
@@ -520,11 +540,24 @@ public class Utils {
         if(response != null) {
             try {
                 CloverTagListResponseBody cloverTagListResponseBody = Constants.OBJECT_MAPPER.readValue(response.body().string(), CloverTagListResponseBody.class);
-                ArrayList<LinkedHashMap<String, String>> unparsedTagList = cloverTagListResponseBody.getElements();
-                for(LinkedHashMap<String, String> mapping : unparsedTagList) {
-                    String id = mapping.get("id");
-                    String name = mapping.get("name");
-                    boolean showInReporting = Boolean.parseBoolean(mapping.get("showInReporting"));
+                ArrayList<LinkedHashMap<String, Object>> unparsedTagList = cloverTagListResponseBody.getElements();
+                for(LinkedHashMap<String, Object> mapping : unparsedTagList) {
+
+                    String id = "";
+                    Object idObject = mapping.get("id");
+                    if(idObject instanceof String)
+                        id = (String) idObject;
+
+                    String name = "";
+                    Object nameObject = mapping.get("name");
+                    if(nameObject instanceof String)
+                        name = (String) nameObject;
+
+                    boolean showInReporting = true;
+                    Object showInReportingObject = mapping.get("showInReporting");
+                    if(showInReportingObject instanceof Boolean)
+                        showInReporting = (Boolean) showInReportingObject;
+
                     Constants.tagList.add(new CloverTag(id, name, showInReporting));
                 }
             } catch(Exception e) {
