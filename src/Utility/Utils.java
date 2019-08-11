@@ -16,9 +16,9 @@ import java.util.stream.Collectors;
 
 public class Utils {
     public static void testUrl() {
-        String[] args = new String[2];
-        args[0] = "items/";
-        args[1] = makeFilterExactSku("730176357294");
+        String[] args = new String[1];
+        args[0] = "item_stocks/";
+        // args[1] = makeFilterExactSku("730176357294");
         System.out.println(buildUrl(args));
     }
 
@@ -385,7 +385,7 @@ public class Utils {
     }
 
     public static Thread grabCloverTags() {
-        Thread thread = new Thread(() -> getCloverTags());
+        Thread thread = new Thread(Utils::getCloverTags);
         thread.start();
         return thread;
     }

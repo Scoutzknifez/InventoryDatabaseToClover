@@ -12,8 +12,9 @@ public class Main
 {
     public static void main(String[] args) {
         Utils.initialize();
+        Utils.testUrl();
         //Utils.printRequiredTags();
-        postAll();
+        //postAll();
     }
 
     private static void postAll() {
