@@ -17,9 +17,14 @@ import java.util.stream.Collectors;
 public class Utils {
     public static void testUrl() {
         String[] args = new String[1];
-        args[0] = "item_stocks/";
+        args[0] = "item_stocks/QARMPHXSQKJJC";
         // args[1] = makeFilterExactSku("730176357294");
         System.out.println(buildUrl(args));
+        runRequest(buildRequest(RequestType.POST, getQuantityString(), args));
+    }
+
+    private static Object getQuantityString() {
+        return "{\"quantity\":3}";
     }
 
 
