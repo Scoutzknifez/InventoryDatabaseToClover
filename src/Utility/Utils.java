@@ -20,13 +20,8 @@ public class Utils {
         args[0] = "item_stocks/QARMPHXSQKJJC";
         // args[1] = makeFilterExactSku("730176357294");
         System.out.println(buildUrl(args));
-        runRequest(buildRequest(RequestType.POST, getQuantityString(), args));
+        //runRequest(buildRequest(RequestType.POST, getQuantityString(), args));
     }
-
-    private static Object getQuantityString() {
-        return "{\"quantity\":3}";
-    }
-
 
     public static void initialize() {
         Thread cloverTagFetcherThread = grabCloverTags();
@@ -41,6 +36,17 @@ public class Utils {
             e.printStackTrace();
         }
     }
+
+    public static void setItemQuantity(CloverItem cloverItem, int quantity) {
+        String[] args = new String[1];
+        args[0] = "item_stocks/" + cloverItem.getId();
+        runRequest(buildRequest(RequestType.POST, getQuantityString(quantity), args));
+    }
+
+    private static Object getQuantityString(int quantity) {
+        return "{\"quantity\"" + quantity + "}";
+    }
+
     public static void printRequiredTags() {
         String listOfTags = "";
         for(Object object : Constants.tagList.getObjectList()) {
