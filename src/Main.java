@@ -1,20 +1,13 @@
-import Structures.CloverTag;
-import Structures.Item;
 import Utility.Constants;
 import Utility.Utils;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class Main
 {
     public static void main(String[] args) {
         Utils.initialize();
-        Utils.testUrl();
+        //Utils.testUrl();
         //Utils.printRequiredTags();
-        //postAll();
+        postAll();
     }
 
     private static void postAll() {
@@ -31,6 +24,9 @@ public class Main
         Utils.syncItems();
         System.out.println("Size: " + Constants.cloverInventoryList.getObjectList().size());
         Utils.linkItems();
+
+        // Utils.setItemQuantity((CloverItem) Constants.cloverInventoryList.get(2), 5);
+
         Utils.saveData();
     }
 }

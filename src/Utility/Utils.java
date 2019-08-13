@@ -44,7 +44,7 @@ public class Utils {
     }
 
     private static Object getQuantityString(int quantity) {
-        return "{\"quantity\"" + quantity + "}";
+        return "{\"quantity\":" + quantity + "}";
     }
 
     public static void printRequiredTags() {
