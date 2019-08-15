@@ -319,7 +319,7 @@ public class Utils {
         for (Object object : Constants.tagList.getObjectList()) {
             if (object instanceof CloverTag) {
                 CloverTag cloverTag = (CloverTag) object;
-                if (cloverTag.getName().equals(item.getBrand())) {
+                if (cloverTag.getName().equalsIgnoreCase(item.getBrand())) {
                     return cloverTag;
                 }
             }
